@@ -18,8 +18,10 @@ dist/
 *.env
 **/.env
 **/.env.*
+!**/.env.template
 **/credentials*
 **/secrets*
+
 
 # Java-specific
 *.class
