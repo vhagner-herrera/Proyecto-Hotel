@@ -1,0 +1,8 @@
+import api from './axios.config';
+
+// Backend espera { correo, contrasena }
+export const login = ({ email, password }) =>
+  api.post('/auth/login', { correo: email, contrasena: password });
+
+export const logout = () => Promise.resolve();
+export const getMe = () => api.get('/auth/me');

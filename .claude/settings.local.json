@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\vhagn\\\\Desktop\\\\proyecto\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "PowerShell(ls -Recurse \"C:\\\\Users\\\\vhagn\\\\Desktop\\\\proyecto\" -Directory | ForEach-Object {$_.FullName})",
+      "Bash(docker compose)",
+      "Bash(docker compose *)",
+      "Bash(docker info *)",
+      "Bash(docker context ls *)",
+      "Bash(docker context *)",
+      "Bash(docker pull *)",
+      "Bash(docker search *)",
+      "Bash(Get-Content *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\vhagn\\\\Desktop\\\\proyecto\\\\hotel-bonaventura\\\\auth-service\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(curl *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\vhagn\\\\Desktop\\\\proyecto\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-Process *)",
+      "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\vhagn\\\\Desktop\\\\proyecto\\\\hotel-bonaventura\\\\habitaciones-service\" -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\vhagn\\\\Desktop\\\\proyecto\\\\hotel-bonaventura\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(docker exec kafka-container *)"
+    ]
+  }
+}

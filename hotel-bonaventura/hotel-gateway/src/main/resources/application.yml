@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: hotel-gateway
+  cloud:
+    gateway:
+      # Rutas definidas en GatewayConfig.java via Java DSL
+
+# URLs de microservicios (fallback a localhost para desarrollo local)
+services:
+  auth-url:          ${AUTH_SERVICE_URL:http://localhost:8081}
+  habitaciones-url:  ${HABITACIONES_SERVICE_URL:http://localhost:8082}
+  reservas-url:      ${RESERVAS_SERVICE_URL:http://localhost:8083}
+  pagos-url:         ${PAGOS_SERVICE_URL:http://localhost:8084}
+  admin-url:         ${ADMIN_SERVICE_URL:http://localhost:8085}
+
+# Configuracion JWT (lee variables de entorno con fallback para desarrollo)
+jwt:
+  secret: ${JWT_SECRET:MiClaveSecretaUltraSeguraParaElHotelBonAventura2026!}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Configuracion CORS
+cors:
+  allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:3000}
+
+# Actuator: exponer health e info
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.hotelbonaventura.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway.handler: TRACE

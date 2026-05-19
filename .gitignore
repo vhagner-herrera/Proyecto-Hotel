@@ -1,0 +1,64 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Build outputs
+target/
+**/target/
+build/
+**/build/
+dist/
+**/dist/
+.gradle/
+**/bin/
+
+# Environment files and credentials (CRITICAL: Protect sensitive data)
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+**/credentials*
+**/secrets*
+
+# Java-specific
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Python-specific
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+
+# System files
+.DS_Store
+Thumbs.db

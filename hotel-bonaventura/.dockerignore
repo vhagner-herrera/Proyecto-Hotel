@@ -1,0 +1,7 @@
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+**/*.md
+mvnw.cmd
+.git
+.gitignore
+pagos-service.log

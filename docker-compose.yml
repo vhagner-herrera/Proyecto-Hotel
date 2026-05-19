@@ -1,0 +1,204 @@
+name: hotel-bonaventura
+
+# ─────────────────────────────────────────────────────────────────
+# Variables de entorno: leídas de hotel-bonaventura/.env
+# Levanta todo con: docker compose up --build
+# ─────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── KAFKA (KRaft mode, sin Zookeeper) ─────────────────────────
+  kafka-container:
+    image: apache/kafka:latest
+    container_name: kafka-container
+    environment:
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-container:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka-container:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - hotel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+  # ── AUTH SERVICE ───────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./hotel-bonaventura
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    env_file: ./hotel-bonaventura/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8081:8081"
+    networks:
+      - hotel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── HABITACIONES SERVICE ───────────────────────────────────────
+  habitaciones-service:
+    build:
+      context: ./hotel-bonaventura
+      dockerfile: habitaciones-service/Dockerfile
+    container_name: habitaciones-service
+    env_file: ./hotel-bonaventura/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8082:8082"
+    networks:
+      - hotel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── RESERVAS SERVICE ───────────────────────────────────────────
+  reservas-service:
+    build:
+      context: ./hotel-bonaventura
+      dockerfile: reservas-service/Dockerfile
+    container_name: reservas-service
+    env_file: ./hotel-bonaventura/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      RENIEC_API_KEY: ${RENIEC_API_KEY:-sk_15279.a8oT7cRhubkeL6v89I1fFJjmTjA0EJ5y}
+    ports:
+      - "8083:8083"
+    networks:
+      - hotel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── PAGOS SERVICE ──────────────────────────────────────────────
+  pagos-service:
+    build:
+      context: ./hotel-bonaventura
+      dockerfile: pagos-service/Dockerfile
+    container_name: pagos-service
+    env_file: ./hotel-bonaventura/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8084:8084"
+    depends_on:
+      kafka-container:
+        condition: service_healthy
+    networks:
+      - hotel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── ADMINISTRACION SERVICE ─────────────────────────────────────
+  administracion-service:
+    build:
+      context: ./hotel-bonaventura
+      dockerfile: administracion-service/Dockerfile
+    container_name: administracion-service
+    env_file: ./hotel-bonaventura/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8085:8085"
+    networks:
+      - hotel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── HOTEL GATEWAY ──────────────────────────────────────────────
+  hotel-gateway:
+    build:
+      context: ./hotel-bonaventura
+      dockerfile: hotel-gateway/Dockerfile
+    container_name: hotel-gateway
+    env_file: ./hotel-bonaventura/.env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # Rutas hacia contenedores por nombre de servicio
+      AUTH_SERVICE_URL:          http://auth-service:8081
+      HABITACIONES_SERVICE_URL:  http://habitaciones-service:8082
+      RESERVAS_SERVICE_URL:      http://reservas-service:8083
+      PAGOS_SERVICE_URL:         http://pagos-service:8084
+      ADMIN_SERVICE_URL:         http://administracion-service:8085
+      CORS_ALLOWED_ORIGIN:       http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      habitaciones-service:
+        condition: service_healthy
+      reservas-service:
+        condition: service_healthy
+      pagos-service:
+        condition: service_healthy
+      administracion-service:
+        condition: service_healthy
+    networks:
+      - hotel-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── FRONTEND ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hotel-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      hotel-gateway:
+        condition: service_healthy
+    networks:
+      - hotel-net
+    restart: unless-stopped
+
+# ─────────────────────────────────────────────────────────────────
+networks:
+  hotel-net:
+    driver: bridge
