@@ -33,7 +33,7 @@ public class ReniecClient {
         String url = apiUrl + "/v1/reniec/dni?numero=" + dni;
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + apiKey);
+        headers.set("X-API-Key", apiKey);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 

@@ -86,7 +86,7 @@ services:
     env_file: ./hotel-bonaventura/.env
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      RENIEC_API_KEY: ${RENIEC_API_KEY:-sk_15279.a8oT7cRhubkeL6v89I1fFJjmTjA0EJ5y}
+      RENIEC_API_KEY: ${RENIEC_API_KEY:-sk_16611.snVv9jopvW7YQ8TL8jIPCYZ0GvrMMm4H}
     ports:
       - "8083:8083"
     networks:

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { getHabitaciones } from '../../api/habitaciones.api';
+import useHabitacionesStore from '../../store/habitacionesStore';
 import HabitacionCard from '../../components/recepcion/HabitacionCard';
 import FiltroEstados from '../../components/recepcion/FiltroEstados';
 
@@ -17,26 +17,21 @@ function SkeletonCard() {
 }
 
 export default function HabitacionesPage() {
-  const [habitaciones, setHabitaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { habitaciones, loading, error, lastFetched, fetchHabitaciones } = useHabitacionesStore();
   const [filtro, setFiltro] = useState('TODAS');
-
-  const fetchHabitaciones = useCallback(async () => {
-    try {
-      const res = await getHabitaciones();
-      setHabitaciones(res.data);
-    } catch {
-      toast.error('Error al cargar las habitaciones');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     fetchHabitaciones();
-    const interval = setInterval(fetchHabitaciones, 30000);
+    // Refresca en segundo plano cada 2 min (antes era 30s)
+    const interval = setInterval(() => fetchHabitaciones(true), 120_000);
     return () => clearInterval(interval);
   }, [fetchHabitaciones]);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
+
+  const showSkeleton = lastFetched === null || (loading && habitaciones.length === 0);
 
   const filtradas =
     filtro === 'TODAS'
@@ -58,7 +53,7 @@ export default function HabitacionesPage() {
 
       <FiltroEstados estadoActual={filtro} onCambiarEstado={setFiltro} />
 
-      {loading ? (
+      {showSkeleton ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>

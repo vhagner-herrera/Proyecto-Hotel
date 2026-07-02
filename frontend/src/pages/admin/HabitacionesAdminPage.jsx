@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { getHabitaciones, deleteHabitacion } from '../../api/habitaciones.api';
+import { useState } from 'react';
+import { deleteHabitacion } from '../../api/habitaciones.api';
 import { formatMoneda } from '../../utils/formatters';
 import ModalCrearHabitacion from '../../components/admin/ModalCrearHabitacion';
 import ModalEditarHabitacion from '../../components/admin/ModalEditarHabitacion';
+import useHabitacionesStore from '../../store/habitacionesStore';
 
 const ESTADO_BADGE = {
   DISPONIBLE:   'bg-green-100 text-green-700',
@@ -43,34 +45,30 @@ function ResumenBadge({ label, count, color }) {
 }
 
 export default function HabitacionesAdminPage() {
-  const [habitaciones, setHabitaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { habitaciones, loading, lastFetched, fetchHabitaciones, invalidate } = useHabitacionesStore();
   const [modalCrear, setModalCrear] = useState(false);
   const [habitacionEditar, setHabitacionEditar] = useState(null);
 
-  const fetchHabitaciones = async () => {
-    try {
-      const res = await getHabitaciones();
-      setHabitaciones(res.data);
-    } catch {
-      toast.error('Error al cargar las habitaciones');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => { fetchHabitaciones(); }, [fetchHabitaciones]);
 
-  useEffect(() => { fetchHabitaciones(); }, []);
+  // Fuerza refresco luego de una mutación (crear, editar, eliminar)
+  const refresh = useCallback(() => {
+    invalidate();
+    fetchHabitaciones(true);
+  }, [invalidate, fetchHabitaciones]);
 
   const handleDelete = async (hab) => {
     if (!confirm(`¿Eliminar la habitación N° ${hab.numero}? Esta acción no se puede deshacer.`)) return;
     try {
       await deleteHabitacion(hab.id);
       toast.success(`Habitación ${hab.numero} eliminada`);
-      fetchHabitaciones();
+      refresh();
     } catch (err) {
       toast.error(err?.response?.data?.message ?? 'Error al eliminar la habitación');
     }
   };
+
+  const showSpinner = lastFetched === null || (loading && habitaciones.length === 0);
 
   const disponibles   = habitaciones.filter((h) => h.estado === 'DISPONIBLE').length;
   const ocupadas      = habitaciones.filter((h) => h.estado === 'OCUPADA').length;
@@ -97,7 +95,7 @@ export default function HabitacionesAdminPage() {
       </div>
 
       {/* Summary strip */}
-      {!loading && (
+      {!showSpinner && (
         <div className="flex flex-wrap gap-2">
           <ResumenBadge label="Disponibles"    count={disponibles}   color="bg-green-50 text-green-700" />
           <ResumenBadge label="Ocupadas"       count={ocupadas}      color="bg-red-50 text-red-700" />
@@ -107,7 +105,7 @@ export default function HabitacionesAdminPage() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        {loading ? (
+        {showSpinner ? (
           <Spinner />
         ) : habitaciones.length === 0 ? (
           <div className="text-center py-14 text-gray-400 text-sm">
@@ -173,13 +171,13 @@ export default function HabitacionesAdminPage() {
       <ModalCrearHabitacion
         isOpen={modalCrear}
         onClose={() => setModalCrear(false)}
-        onSuccess={fetchHabitaciones}
+        onSuccess={refresh}
       />
       <ModalEditarHabitacion
         isOpen={!!habitacionEditar}
         onClose={() => setHabitacionEditar(null)}
         habitacion={habitacionEditar}
-        onSuccess={fetchHabitaciones}
+        onSuccess={refresh}
       />
     </div>
   );

@@ -33,7 +33,7 @@ spring:
 reniec:
   api:
     url: ${RENIEC_API_URL:https://api.decolecta.com}
-    key: ${RENIEC_API_KEY:sk_15279.a8oT7cRhubkeL6v89I1fFJjmTjA0EJ5y}
+    key: ${RENIEC_API_KEY:sk_16611.snVv9jopvW7YQ8TL8jIPCYZ0GvrMMm4H}
 
 management:
   endpoints:
