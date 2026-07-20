@@ -4,41 +4,40 @@ import com.hotelbonaventura.administracion.dto.ActualizarUsuarioDTO;
 import com.hotelbonaventura.administracion.dto.CrearUsuarioDTO;
 import com.hotelbonaventura.administracion.dto.UsuarioDTO;
 import com.hotelbonaventura.administracion.entity.Usuario;
+import com.hotelbonaventura.administracion.exception.CorreoDuplicadoException;
 import com.hotelbonaventura.administracion.exception.UsuarioNoEncontradoException;
 import com.hotelbonaventura.administracion.repository.UsuarioRepository;
 import com.hotelbonaventura.administracion.service.UsuarioAdminService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UsuarioAdminServiceImpl implements UsuarioAdminService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional(readOnly = true)
     public List<UsuarioDTO> listarTodos() {
         return usuarioRepository.findAll().stream()
                 .map(this::toDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     @Transactional
     public UsuarioDTO crear(CrearUsuarioDTO dto) {
-        if (usuarioRepository.findByCorreo(dto.getCorreo()).isPresent()) {
-            throw new RuntimeException("El correo ya está registrado");
+        if (usuarioRepository.existsByCorreo(dto.getCorreo())) {
+            throw new CorreoDuplicadoException("El correo ya está registrado");
         }
 
         Usuario usuario = new Usuario();

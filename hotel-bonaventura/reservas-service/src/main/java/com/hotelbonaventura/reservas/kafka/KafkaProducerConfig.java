@@ -9,9 +9,13 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Define explicitamente el KafkaTemplate<String, String> que inyecta
+ * KafkaProducerService. El bean autoconfigurado por Spring Boot es
+ * KafkaTemplate<?, ?> y no satisface la inyeccion tipada.
+ */
 @Configuration
 public class KafkaProducerConfig {
 
@@ -20,15 +24,15 @@ public class KafkaProducerConfig {
 
     @Bean
     public ProducerFactory<String, String> producerFactory() {
-        Map<String, Object> config = new HashMap<>();
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        return new DefaultKafkaProducerFactory<>(config);
+        return new DefaultKafkaProducerFactory<>(Map.of(
+                ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
+                ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class,
+                ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class
+        ));
     }
 
     @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
 }

@@ -28,6 +28,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     private final HabitacionMapper habitacionMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<HabitacionDTO> listarTodas() {
         List<Habitacion> habitaciones = habitacionRepository.findAllByOrderByNumeroAsc();
         log.info("Listando {} habitaciones", habitaciones.size());
@@ -35,6 +36,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<HabitacionDTO> listarDisponibles() {
         List<Habitacion> disponibles = habitacionRepository.findByEstadoOrderByNumeroAsc("DISPONIBLE");
         log.info("Habitaciones disponibles: {}", disponibles.size());
@@ -42,6 +44,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<HabitacionDTO> listarPorEstado(String estado) {
         String estadoUpper = estado.toUpperCase();
         validarEstado(estadoUpper);
@@ -54,6 +57,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     @Transactional
     public CambioEstadoResponseDTO cambiarEstado(UUID id, String nuevoEstado, String userRole) {
         String estadoUpper = nuevoEstado.toUpperCase();
+        validarEstado(estadoUpper);
 
         if ("OCUPADA".equals(estadoUpper)) {
             throw new EstadoInvalidoException(
@@ -102,6 +106,7 @@ public class HabitacionServiceImpl implements HabitacionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public HabitacionDTO obtenerHabitacion(UUID id) {
         Habitacion habitacion = habitacionRepository.findById(id)
                 .orElseThrow(() -> new HabitacionNoEncontradaException(
@@ -139,7 +144,9 @@ public class HabitacionServiceImpl implements HabitacionService {
         habitacion.setPrecioPorNoche(request.getPrecioPorNoche());
 
         if (request.getEstado() != null && !request.getEstado().isBlank()) {
-            habitacion.setEstado(request.getEstado().toUpperCase());
+            String estadoUpper = request.getEstado().toUpperCase();
+            validarEstado(estadoUpper);
+            habitacion.setEstado(estadoUpper);
         }
 
         Habitacion saved = habitacionRepository.save(habitacion);

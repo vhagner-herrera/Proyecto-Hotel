@@ -12,13 +12,14 @@ import java.util.UUID;
 
 public interface BoletaRepository extends JpaRepository<Boleta, UUID> {
 
+    // Rango medio-abierto [inicio, fin): 'fin' es el inicio del dia siguiente
     @Query(value = "SELECT SUM(importe_total) FROM hotel_pagos.boletas " +
-                   "WHERE fecha_emision BETWEEN :inicio AND :fin", nativeQuery = true)
+                   "WHERE fecha_emision >= :inicio AND fecha_emision < :fin", nativeQuery = true)
     BigDecimal calcularIngresosPorPeriodo(@Param("inicio") LocalDateTime inicio,
                                           @Param("fin") LocalDateTime fin);
 
     @Query(value = "SELECT COUNT(*) FROM hotel_pagos.boletas " +
-                   "WHERE fecha_emision BETWEEN :inicio AND :fin", nativeQuery = true)
+                   "WHERE fecha_emision >= :inicio AND fecha_emision < :fin", nativeQuery = true)
     long contarBoletasPorPeriodo(@Param("inicio") LocalDateTime inicio,
                                  @Param("fin") LocalDateTime fin);
 
@@ -26,7 +27,7 @@ public interface BoletaRepository extends JpaRepository<Boleta, UUID> {
                    "SUM(importe_total) as ingresos, " +
                    "COUNT(*) as boletas " +
                    "FROM hotel_pagos.boletas " +
-                   "WHERE fecha_emision BETWEEN :inicio AND :fin " +
+                   "WHERE fecha_emision >= :inicio AND fecha_emision < :fin " +
                    "GROUP BY DATE(fecha_emision) " +
                    "ORDER BY fecha", nativeQuery = true)
     List<Object[]> obtenerIngresosPorDia(@Param("inicio") LocalDateTime inicio,

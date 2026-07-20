@@ -2,9 +2,8 @@ package com.hotelbonaventura.administracion.controller;
 
 import com.hotelbonaventura.administracion.dto.ParametroDTO;
 import com.hotelbonaventura.administracion.service.ParametroService;
-import com.hotelbonaventura.administracion.exception.AccesoNoAutorizadoException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,30 +11,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * El rol ADMINISTRADOR lo valida AdminRoleInterceptor para todo /api/admin/**.
+ */
 @RestController
 @RequestMapping("/api/admin/parametros")
 @Slf4j
+@RequiredArgsConstructor
 public class ParametroController {
 
-    @Autowired
-    private ParametroService parametroService;
+    private final ParametroService parametroService;
 
     @GetMapping
-    public ResponseEntity<List<ParametroDTO>> listarTodos(
-            @RequestHeader(value = "X-User-Role", required = false) String userRole
-    ) {
-        validarRolAdministrador(userRole);
+    public ResponseEntity<List<ParametroDTO>> listarTodos() {
         return ResponseEntity.ok(parametroService.listarTodos());
     }
 
     @PutMapping("/{clave}")
     public ResponseEntity<Map<String, Object>> actualizar(
             @PathVariable String clave,
-            @RequestBody Map<String, String> request,
-            @RequestHeader(value = "X-User-Role", required = false) String userRole
+            @RequestBody Map<String, String> request
     ) {
-        validarRolAdministrador(userRole);
-
         String nuevoValor = request.get("valor");
         ParametroDTO actualizado = parametroService.actualizar(clave, nuevoValor);
 
@@ -45,11 +41,5 @@ public class ParametroController {
         response.put("message", "Parámetro actualizado correctamente");
 
         return ResponseEntity.ok(response);
-    }
-
-    private void validarRolAdministrador(String userRole) {
-        if (!"ADMINISTRADOR".equals(userRole)) {
-            throw new AccesoNoAutorizadoException("Acceso denegado. Se requiere rol ADMINISTRADOR");
-        }
     }
 }

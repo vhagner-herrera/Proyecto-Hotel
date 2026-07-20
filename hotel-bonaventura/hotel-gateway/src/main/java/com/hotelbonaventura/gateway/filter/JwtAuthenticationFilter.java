@@ -81,8 +81,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
         log.debug("Usuario autenticado: {} | Rol: {} | Ruta: {}", email, rol, path);
 
-        // Inyectar datos del usuario como headers hacia el microservicio destino
+        // Inyectar datos del usuario como headers hacia el microservicio destino.
+        // Se eliminan primero los X-User-* entrantes: un cliente malicioso podria
+        // enviarlos directamente para suplantar el rol (mutate().header() agrega, no reemplaza).
         ServerHttpRequest requestMutado = exchange.getRequest().mutate()
+                .headers(headers -> {
+                    headers.remove("X-User-Email");
+                    headers.remove("X-User-Role");
+                })
                 .header("X-User-Email", email)
                 .header("X-User-Role",  rol)
                 .build();

@@ -19,7 +19,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # El schema lo gestiona la BD (Supabase); Hibernate nunca debe modificarlo
+      ddl-auto: none
     properties:
       hibernate:
         default_schema: hotel_reservas
@@ -27,19 +28,24 @@ spring:
     show-sql: false
     open-in-view: false
 
+  # Producer Kafka: Spring Boot autoconfigura KafkaTemplate con StringSerializer (default)
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka-container:9092}
+    bootstrap-servers: ${KAFKA_BROKER:localhost:9092}
 
+# API de PeruDevs para consulta de DNI (RENIEC)
 reniec:
   api:
-    url: ${RENIEC_API_URL:https://api.decolecta.com}
-    key: ${RENIEC_API_KEY:sk_16611.snVv9jopvW7YQ8TL8jIPCYZ0GvrMMm4H}
+    url: ${RENIEC_API_URL:https://api.perudevs.com}
+    key: ${RENIEC_API_KEY:}
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: reservas-service
   endpoint:
     health:
       show-details: always

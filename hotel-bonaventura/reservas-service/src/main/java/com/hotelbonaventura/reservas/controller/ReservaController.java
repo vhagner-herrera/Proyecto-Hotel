@@ -4,7 +4,6 @@ import com.hotelbonaventura.reservas.dto.CheckinRequestDTO;
 import com.hotelbonaventura.reservas.dto.CheckinResponseDTO;
 import com.hotelbonaventura.reservas.dto.ReniecResponseDTO;
 import com.hotelbonaventura.reservas.dto.ReservaDTO;
-import com.hotelbonaventura.reservas.exception.ReservaException;
 import com.hotelbonaventura.reservas.service.ReservaService;
 import com.hotelbonaventura.reservas.service.ReniecService;
 import jakarta.validation.Valid;
@@ -34,14 +33,8 @@ public class ReservaController {
 
     @GetMapping("/consultar-dni/{dni}")
     public ResponseEntity<ReniecResponseDTO> consultarDni(@PathVariable String dni) {
-        log.info("🔍 Consultando DNI: {}", dni);
-
-        if (!dni.matches("^[0-9]{8}$")) {
-            throw new ReservaException("DNI debe tener exactamente 8 dígitos numéricos");
-        }
-
-        ReniecResponseDTO response = reniecService.consultarDni(dni);
-        return ResponseEntity.ok(response);
+        // La validacion del formato del DNI la hace ReniecService (unico punto de validacion)
+        return ResponseEntity.ok(reniecService.consultarDni(dni));
     }
 
     @PostMapping("/checkin")
@@ -49,11 +42,7 @@ public class ReservaController {
             @Valid @RequestBody CheckinRequestDTO request,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail) {
 
-        log.info("📥 Check-in solicitado por: {} - Habitación: {} - Documento: {}",
-                 userEmail, request.getNumeroHabitacion(), request.getClienteDocumento());
-
         CheckinResponseDTO response = reservaService.procesarCheckin(request, userEmail);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

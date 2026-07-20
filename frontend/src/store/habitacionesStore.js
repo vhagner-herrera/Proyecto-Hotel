@@ -26,6 +26,22 @@ const useHabitacionesStore = create((set, get) => ({
   },
 
   invalidate: () => set({ lastFetched: null }),
+
+  /**
+   * Actualización optimista tras un check-in exitoso: marca la habitación
+   * como OCUPADA en el cache local sin esperar al backend.
+   * Se marca el cache como fresco a propósito: el cambio real llega por
+   * Kafka con ~1s de retraso, y un refetch inmediato podría devolver
+   * DISPONIBLE otra vez y pisar este estado. El polling periódico o la
+   * siguiente visita reconcilian con el servidor.
+   */
+  marcarOcupada: (idHabitacion) =>
+    set((state) => ({
+      habitaciones: state.habitaciones.map((h) =>
+        h.id === idHabitacion ? { ...h, estado: 'OCUPADA' } : h
+      ),
+      lastFetched: Date.now(),
+    })),
 }));
 
 export default useHabitacionesStore;

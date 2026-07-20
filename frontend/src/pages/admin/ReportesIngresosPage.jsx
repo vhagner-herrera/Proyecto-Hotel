@@ -11,17 +11,7 @@ import { getReportesIngresos } from '../../api/admin.api';
 import StatsCard from '../../components/admin/StatsCard';
 import GraficoIngresos from '../../components/admin/GraficoIngresos';
 import { formatMoneda } from '../../utils/formatters';
-
-function Spinner() {
-  return (
-    <div className="flex items-center justify-center py-14">
-      <svg className="animate-spin h-7 w-7 text-[#1e3a5f]" viewBox="0 0 24 24" fill="none">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-      </svg>
-    </div>
-  );
-}
+import Spinner from '../../components/common/Spinner';
 
 const DATE_INPUT_CLS =
   'px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/20';
@@ -33,19 +23,14 @@ export default function ReportesIngresosPage() {
   const [fechaInicio, setFechaInicio] = useState(firstDay);
   const [fechaFin, setFechaFin] = useState(today);
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const fetchReporte = async (inicio, fin) => {
-    setLoading(true);
-    try {
-      const res = await getReportesIngresos(inicio, fin);
-      setData(res.data);
-    } catch {
-      toast.error('Error al cargar el reporte de ingresos');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // No cambia 'loading' de forma síncrona: quien refresca manualmente activa el spinner antes
+  const fetchReporte = (inicio, fin) =>
+    getReportesIngresos(inicio, fin)
+      .then((res) => setData(res.data))
+      .catch(() => toast.error('Error al cargar el reporte de ingresos'))
+      .finally(() => setLoading(false));
 
   useEffect(() => {
     fetchReporte(firstDay, today);
@@ -56,6 +41,7 @@ export default function ReportesIngresosPage() {
       toast.error('La fecha de inicio no puede ser mayor a la fecha fin');
       return;
     }
+    setLoading(true);
     fetchReporte(fechaInicio, fechaFin);
   };
 

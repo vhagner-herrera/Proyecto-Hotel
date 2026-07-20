@@ -23,22 +23,21 @@ spring:
     show-sql: false
     open-in-view: false
 
+  # Solo broker y group-id: los deserializadores los define KafkaConsumerConfig
+  # (en Spring Boot 4 los @KafkaListener requieren @EnableKafka explicito)
   kafka:
     bootstrap-servers: ${KAFKA_BROKER:localhost:9092}
     consumer:
       group-id: habitaciones-service-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "com.hotelbonaventura.*"
-        spring.json.value.default.type: com.hotelbonaventura.habitaciones.kafka.ReservaCompletadaEvent
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: habitaciones-service
   endpoint:
     health:
       show-details: when-authorized

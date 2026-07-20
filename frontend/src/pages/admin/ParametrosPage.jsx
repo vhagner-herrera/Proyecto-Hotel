@@ -2,17 +2,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { PencilSquareIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getParametros, updateParametro } from '../../api/admin.api';
-
-function Spinner() {
-  return (
-    <div className="flex items-center justify-center py-14">
-      <svg className="animate-spin h-6 w-6 text-[#1e3a5f]" viewBox="0 0 24 24" fill="none">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-      </svg>
-    </div>
-  );
-}
+import Spinner from '../../components/common/Spinner';
 
 export default function ParametrosPage() {
   const [parametros, setParametros] = useState([]);
@@ -20,16 +10,11 @@ export default function ParametrosPage() {
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState(null); // { clave, valor }
 
-  const fetchParametros = async () => {
-    try {
-      const res = await getParametros();
-      setParametros(res.data);
-    } catch {
-      toast.error('Error al cargar los parámetros');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchParametros = () =>
+    getParametros()
+      .then((res) => setParametros(res.data))
+      .catch(() => toast.error('Error al cargar los parámetros'))
+      .finally(() => setLoading(false));
 
   useEffect(() => { fetchParametros(); }, []);
 

@@ -86,7 +86,7 @@ services:
     env_file: ./hotel-bonaventura/.env
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      RENIEC_API_KEY: ${RENIEC_API_KEY:-sk_16611.snVv9jopvW7YQ8TL8jIPCYZ0GvrMMm4H}
+      RENIEC_API_KEY: ${RENIEC_API_KEY}
     ports:
       - "8083:8083"
     networks:
@@ -198,7 +198,67 @@ services:
       - hotel-net
     restart: unless-stopped
 
+  # ── OBSERVABILIDAD Y AUDITORÍA (Métricas + Logs) ───────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - hotel-net
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml
+    command:
+      - '-config.file=/etc/loki/loki-config.yml'
+    networks:
+      - hotel-net
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - '-config.file=/etc/promtail/config.yml'
+    depends_on:
+      - loki
+    networks:
+      - hotel-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - hotel-net
+    restart: unless-stopped
+
 # ─────────────────────────────────────────────────────────────────
 networks:
   hotel-net:
     driver: bridge
+

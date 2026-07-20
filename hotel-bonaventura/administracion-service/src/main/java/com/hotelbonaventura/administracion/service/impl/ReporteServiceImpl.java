@@ -6,9 +6,10 @@ import com.hotelbonaventura.administracion.repository.HabitacionRepository;
 import com.hotelbonaventura.administracion.repository.ReservaRepository;
 import com.hotelbonaventura.administracion.repository.UsuarioRepository;
 import com.hotelbonaventura.administracion.service.ReporteService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,28 +17,24 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReporteServiceImpl implements ReporteService {
 
-    @Autowired
-    private BoletaRepository boletaRepository;
-
-    @Autowired
-    private ReservaRepository reservaRepository;
-
-    @Autowired
-    private HabitacionRepository habitacionRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final BoletaRepository boletaRepository;
+    private final ReservaRepository reservaRepository;
+    private final HabitacionRepository habitacionRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     public ReporteIngresosDTO generarReporteIngresos(LocalDate inicio, LocalDate fin) {
+        // Rango medio-abierto [inicio, fin+1dia): incluye el dia final completo,
+        // sin perder el ultimo segundo como ocurria con fin.atTime(23:59:59)
         LocalDateTime inicioDateTime = inicio.atStartOfDay();
-        LocalDateTime finDateTime = fin.atTime(23, 59, 59);
+        LocalDateTime finDateTime = fin.plusDays(1).atStartOfDay();
 
         BigDecimal totalIngresos = boletaRepository.calcularIngresosPorPeriodo(inicioDateTime, finDateTime);
         if (totalIngresos == null) {
@@ -56,7 +53,7 @@ public class ReporteServiceImpl implements ReporteService {
                         row[1] != null ? new BigDecimal(row[1].toString()) : BigDecimal.ZERO,
                         row[2] != null ? ((Number) row[2]).longValue() : 0L
                 ))
-                .collect(Collectors.toList());
+                .toList();
 
         PeriodoDTO periodo = new PeriodoDTO(inicio, fin);
 
@@ -82,7 +79,7 @@ public class ReporteServiceImpl implements ReporteService {
                     double porcentajeTipo = totalTipo > 0 ? (ocupadasTipo * 100.0 / totalTipo) : 0.0;
                     return new DetalleOcupacionDTO(tipo, totalTipo, disponiblesTipo, ocupadasTipo, porcentajeTipo);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         return new ReporteOcupacionDTO(
                 (int) total,
@@ -104,7 +101,7 @@ public class ReporteServiceImpl implements ReporteService {
 
         long reservasMes = reservaRepository.contarReservasPorPeriodo(
                 primerDiaMes.atStartOfDay(),
-                hoy.atTime(23, 59, 59)
+                hoy.plusDays(1).atStartOfDay()
         );
 
         long usuariosActivos = usuarioRepository.countByEstado("ACTIVO");

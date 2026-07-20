@@ -35,7 +35,18 @@
       "Bash(Get-ChildItem -Path C:\\\\Users\\\\vhagn\\\\Desktop\\\\proyecto -Recurse -Directory -Force)",
       "Bash(Select-Object -First 50)",
       "Bash(Format-Table FullName)",
-      "PowerShell(head *)"
+      "PowerShell(head *)",
+      "PowerShell(Add-Content *)",
+      "Bash(./mvnw compile *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(python -m py_compile pagos-service/kafka_consumer.py pagos-service/main.py pagos-service/boleta_generator.py pagos-service/database.py pagos-service/pdf_generator.py)",
+      "Bash(git -C .. status --short -- hotel-bonaventura)",
+      "Bash(npm run *)",
+      "Bash(grep -E \"error|\\\\.jsx?$|\\\\.js$\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(python -m py_compile \"C:/Users/vhagn/Desktop/proyecto/hotel-bonaventura/pagos-service/main.py\" \"C:/Users/vhagn/Desktop/proyecto/hotel-bonaventura/pagos-service/kafka_consumer.py\" \"C:/Users/vhagn/Desktop/proyecto/hotel-bonaventura/pagos-service/database.py\" \"C:/Users/vhagn/Desktop/proyecto/hotel-bonaventura/pagos-service/boleta_generator.py\" \"C:/Users/vhagn/Desktop/proyecto/hotel-bonaventura/pagos-service/pdf_generator.py\")",
+      "Bash(grep -E --line-buffered \"ERROR|error|failed|Built|DONE [0-9]{3,}\")"
     ]
   }
 }

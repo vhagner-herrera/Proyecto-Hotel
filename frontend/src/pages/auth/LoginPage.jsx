@@ -3,11 +3,11 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import toast, { Toaster } from 'react-hot-toast';
-import { EyeIcon, EyeSlashIcon, BuildingOffice2Icon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
 import { login as loginApi } from '../../api/auth.api';
 import { ROLES } from '../../utils/constants';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const schema = yup.object({
   email: yup.string().email('Email inválido').required('El email es requerido'),
@@ -21,7 +21,7 @@ const ROLE_LABELS = {
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { setUser, setToken } = useAuthStore();
+  const { isAuthenticated, user, login } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -31,13 +31,17 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
+  // Sesión activa: no tiene sentido mostrar el login
+  if (isAuthenticated) {
+    return <Navigate to={user?.rol === ROLES.ADMIN ? '/admin' : '/recepcion'} replace />;
+  }
+
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       const res = await loginApi(data);
-      const { token, nombre, rol, email } = res.data;
-      setToken(token);
-      setUser({ nombre, rol, email });
+      const { token, nombre, rol, email, expiresIn } = res.data;
+      login({ token, nombre, rol, email, expiresIn });
       toast.success(`Bienvenido, ${nombre}`);
       navigate(rol === ROLES.ADMIN ? '/admin' : '/recepcion');
     } catch (err) {
@@ -58,9 +62,6 @@ export default function LoginPage() {
         <div className="flex-1 px-10 py-12 lg:px-14 flex flex-col justify-center">
           {/* Logo */}
           <div className="flex items-center gap-2.5 mb-10">
-            {/* <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <BuildingOffice2Icon className="w-5 h-5 text-white" />
-            </div> */}
             <span className="font-bold text-gray-800 text-base">Hotel Bonaventura</span>
           </div>
 

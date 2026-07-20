@@ -16,10 +16,10 @@ services:
   pagos-url:         ${PAGOS_SERVICE_URL:http://localhost:8084}
   admin-url:         ${ADMIN_SERVICE_URL:http://localhost:8085}
 
-# Configuracion JWT (lee variables de entorno con fallback para desarrollo)
+# Configuracion JWT: el secret SIEMPRE viene de la variable de entorno JWT_SECRET
+# (sin fallback hardcodeado: un secret en el repositorio es un riesgo de seguridad)
 jwt:
-  secret: ${JWT_SECRET:MiClaveSecretaUltraSeguraParaElHotelBonAventura2026!}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: ${JWT_SECRET}
 
 # Configuracion CORS
 cors:
@@ -30,14 +30,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: hotel-gateway
   endpoint:
     health:
       show-details: always
 
-# Logging
+# Logging: niveles INFO en adelante (DEBUG/TRACE degradan el rendimiento por peticion)
 logging:
   level:
-    com.hotelbonaventura.gateway: DEBUG
-    org.springframework.cloud.gateway: INFO
-    org.springframework.cloud.gateway.handler: TRACE
+    com.hotelbonaventura.gateway: INFO
+    org.springframework.cloud.gateway: WARN

@@ -11,32 +11,21 @@ import {
 import StatsCard from '../../components/admin/StatsCard';
 import { getDashboard } from '../../api/admin.api';
 import { formatMoneda } from '../../utils/formatters';
-
-function Spinner() {
-  return (
-    <svg className="animate-spin h-7 w-7 text-[#1e3a5f]" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-    </svg>
-  );
-}
+import Spinner from '../../components/common/Spinner';
 
 export default function HomeAdmin() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await getDashboard();
-      setData(res.data);
-      setError(null);
-    } catch {
-      setError('No se pudo cargar el dashboard');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchData = useCallback(() =>
+    getDashboard()
+      .then((res) => {
+        setData(res.data);
+        setError(null);
+      })
+      .catch(() => setError('No se pudo cargar el dashboard'))
+      .finally(() => setLoading(false)), []);
 
   useEffect(() => {
     fetchData();
@@ -48,7 +37,7 @@ export default function HomeAdmin() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3">
-          <Spinner />
+          <Spinner className="" />
           <span className="text-sm text-gray-500">Cargando dashboard...</span>
         </div>
       </div>
@@ -74,7 +63,7 @@ export default function HomeAdmin() {
   const extra = [
     {
       label: 'Porcentaje Ocupación',
-      value: `${data?.porcentajeOcupacion ?? 0}%`,
+      value: `${Number(data?.porcentajeOcupacion ?? 0).toFixed(1)}%`,
       icon: HomeIcon,
       cls: 'text-blue-600 bg-blue-50',
     },

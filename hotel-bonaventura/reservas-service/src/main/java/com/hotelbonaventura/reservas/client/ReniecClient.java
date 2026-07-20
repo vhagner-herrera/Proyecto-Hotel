@@ -4,72 +4,105 @@ import com.hotelbonaventura.reservas.dto.ReniecResponseDTO;
 import com.hotelbonaventura.reservas.exception.DniNoEncontradoException;
 import com.hotelbonaventura.reservas.exception.ReservaException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.Map;
 
+/**
+ * Cliente de la API de PeruDevs para consultar DNI en RENIEC.
+ *
+ * GET {apiUrl}/api/v1/dni/simple?document={dni}&key={apiKey}
+ *
+ * Respuesta:
+ * {
+ *   "estado": true,
+ *   "mensaje": "Encontrado",
+ *   "resultado": {
+ *     "id": "12345678",
+ *     "nombres": "MARIA ISABEL",
+ *     "apellido_paterno": "JIMENEZ",
+ *     "apellido_materno": "DIAZ",
+ *     "nombre_completo": "MARIA ISABEL JIMENEZ DIAZ",
+ *     "codigo_verificacion": "8"
+ *   }
+ * }
+ */
 @Component
 @Slf4j
 public class ReniecClient {
 
-    @Value("${reniec.api.url}")
-    private String apiUrl;
+    private static final ParameterizedTypeReference<Map<String, Object>> RESPONSE_TYPE =
+            new ParameterizedTypeReference<>() {};
 
-    @Value("${reniec.api.key}")
-    private String apiKey;
+    private final RestTemplate restTemplate;
+    private final String apiUrl;
+    private final String apiKey;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    public ReniecClient(RestTemplate restTemplate,
+                        @Value("${reniec.api.url}") String apiUrl,
+                        @Value("${reniec.api.key}") String apiKey) {
+        this.restTemplate = restTemplate;
+        this.apiUrl = apiUrl;
+        this.apiKey = apiKey;
+    }
 
     public ReniecResponseDTO consultarDni(String dni) {
-        String url = apiUrl + "/v1/reniec/dni?numero=" + dni;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-API-Key", apiKey);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        // La key va como query param; no loguear la URI completa para no exponerla
+        URI uri = UriComponentsBuilder.fromUriString(apiUrl)
+                .path("/api/v1/dni/simple")
+                .queryParam("document", dni)
+                .queryParam("key", apiKey)
+                .build()
+                .toUri();
 
         try {
-            log.info("🔍 Consultando DNI {} en RENIEC...", dni);
+            log.info("🔍 Consultando DNI {} en RENIEC (PeruDevs)...", dni);
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                entity,
-                Map.class
-            );
+            ResponseEntity<Map<String, Object>> response =
+                    restTemplate.exchange(uri, HttpMethod.GET, null, RESPONSE_TYPE);
 
-            Map<String, String> body = response.getBody();
+            Map<String, Object> body = response.getBody();
 
             if (body == null) {
                 throw new DniNoEncontradoException("Respuesta vacía de RENIEC");
             }
 
-            if (body.containsKey("error")) {
-                log.error("❌ Error RENIEC: {}", body.get("error"));
-                throw new DniNoEncontradoException(body.get("error"));
+            boolean encontrado = Boolean.TRUE.equals(body.get("estado"));
+            if (!encontrado) {
+                String mensaje = body.get("mensaje") != null
+                        ? body.get("mensaje").toString()
+                        : "DNI no encontrado en RENIEC";
+                log.warn("❌ RENIEC sin resultado para DNI {}: {}", dni, mensaje);
+                throw new DniNoEncontradoException(mensaje);
             }
 
-            log.info("✅ DNI encontrado: {}", body.get("full_name"));
+            @SuppressWarnings("unchecked")
+            Map<String, Object> resultado = (Map<String, Object>) body.get("resultado");
+            if (resultado == null) {
+                throw new DniNoEncontradoException("Respuesta de RENIEC sin datos del titular");
+            }
+
+            String nombreCompleto = str(resultado.get("nombre_completo"));
+            log.info("✅ DNI encontrado: {}", nombreCompleto);
 
             return new ReniecResponseDTO(
-                body.get("document_number"),
-                body.get("full_name"),
-                body.get("first_name"),
-                body.get("first_last_name"),
-                body.get("second_last_name")
+                    str(resultado.get("id")),
+                    nombreCompleto,
+                    str(resultado.get("nombres")),
+                    str(resultado.get("apellido_paterno")),
+                    str(resultado.get("apellido_materno"))
             );
 
         } catch (HttpClientErrorException.NotFound e) {
-            log.error("❌ DNI {} no encontrado en RENIEC", dni);
+            log.warn("❌ DNI {} no encontrado en RENIEC", dni);
             throw new DniNoEncontradoException("DNI no encontrado en RENIEC");
         } catch (DniNoEncontradoException e) {
             throw e;
@@ -77,5 +110,9 @@ public class ReniecClient {
             log.error("❌ Error al consultar RENIEC: {}", e.getMessage());
             throw new ReservaException("Error al consultar DNI: " + e.getMessage());
         }
+    }
+
+    private static String str(Object value) {
+        return value != null ? value.toString() : null;
     }
 }

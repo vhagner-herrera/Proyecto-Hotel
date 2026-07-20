@@ -45,15 +45,21 @@ def procesar_pago_y_boleta(event: dict):
     id_reserva = event.get('idReserva')
     monto_total = event.get('montoTotal')
     metodo_pago = event.get('metodoPago', 'TARJETA')
-    
+
     pago_id = str(uuid.uuid4())
     ahora = datetime.now()
-    
+
     # Generar datos de boleta
     boleta_data = generar_datos_boleta(event, pago_id)
-    
+
     with get_db_connection() as conn:
         with conn.cursor() as cur:
+            # Idempotencia: si Kafka re-entrega el evento, no duplicar pago/boleta
+            cur.execute("SELECT 1 FROM hotel_pagos.pagos WHERE id_reserva = %s", (id_reserva,))
+            if cur.fetchone():
+                logger.info(f"⏭️ Pago ya registrado para reserva {id_reserva}, evento ignorado")
+                return
+
             # 1. Insertar Pago
             cur.execute("""
                 INSERT INTO hotel_pagos.pagos (id, id_reserva, monto, metodo_pago, fecha_pago, estado)

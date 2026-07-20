@@ -5,29 +5,30 @@ import com.hotelbonaventura.administracion.entity.ParametroGlobal;
 import com.hotelbonaventura.administracion.exception.ParametroNoEncontradoException;
 import com.hotelbonaventura.administracion.repository.ParametroRepository;
 import com.hotelbonaventura.administracion.service.ParametroService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ParametroServiceImpl implements ParametroService {
 
-    @Autowired
-    private ParametroRepository parametroRepository;
+    private final ParametroRepository parametroRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<ParametroDTO> listarTodos() {
         return parametroRepository.findAll().stream()
                 .map(p -> new ParametroDTO(p.getClave(), p.getValor(), p.getUpdatedAt()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ParametroDTO obtenerPorClave(String clave) {
         ParametroGlobal param = parametroRepository.findById(clave)
                 .orElseThrow(() -> new ParametroNoEncontradoException("Parámetro no encontrado: " + clave));

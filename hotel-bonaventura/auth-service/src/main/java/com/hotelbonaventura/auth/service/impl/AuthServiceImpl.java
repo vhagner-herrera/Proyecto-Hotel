@@ -8,7 +8,6 @@ import com.hotelbonaventura.auth.service.AuthService;
 import com.hotelbonaventura.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,9 +31,6 @@ public class AuthServiceImpl implements AuthService {
     private final UsuarioRepository usuarioRepository;
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder passwordEncoder;
-
-    @Value("${JWT_EXPIRATION}")
-    private Long jwtExpiration;
 
     @Override
     public AuthResponseDTO login(LoginRequestDTO request) {
@@ -72,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(usuario.getCorreo())
                 .nombre(usuario.getNombre())
                 .rol(usuario.getRol())
-                .expiresIn(jwtExpiration)
+                .expiresIn(jwtUtil.getExpiration())
                 .build();
     }
 }

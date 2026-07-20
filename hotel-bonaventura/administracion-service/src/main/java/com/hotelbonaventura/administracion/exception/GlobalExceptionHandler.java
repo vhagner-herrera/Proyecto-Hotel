@@ -35,6 +35,12 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(404, "Not Found", ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(CorreoDuplicadoException.class)
+    public ResponseEntity<Map<String, Object>> handleCorreoDuplicado(
+            CorreoDuplicadoException ex, HttpServletRequest request) {
+        return buildErrorResponse(409, "Conflict", ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(
             MethodArgumentNotValidException ex, HttpServletRequest request) {

@@ -22,8 +22,9 @@ export default function HabitacionesPage() {
 
   useEffect(() => {
     fetchHabitaciones();
-    // Refresca en segundo plano cada 2 min (antes era 30s)
-    const interval = setInterval(() => fetchHabitaciones(true), 120_000);
+    // Refresca en segundo plano cada 30s para reflejar cambios de estado
+    // (check-ins de otros usuarios, Kafka) sin recargar la página
+    const interval = setInterval(() => fetchHabitaciones(true), 30_000);
     return () => clearInterval(interval);
   }, [fetchHabitaciones]);
 

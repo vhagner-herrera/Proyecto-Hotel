@@ -10,8 +10,9 @@ import java.util.UUID;
 
 public interface ReservaRepository extends JpaRepository<Reserva, UUID> {
 
+    // Rango medio-abierto [inicio, fin): 'fin' es el inicio del dia siguiente
     @Query(value = "SELECT COUNT(*) FROM hotel_reservas.reservas " +
-                   "WHERE created_at BETWEEN :inicio AND :fin", nativeQuery = true)
+                   "WHERE created_at >= :inicio AND created_at < :fin", nativeQuery = true)
     long contarReservasPorPeriodo(@Param("inicio") LocalDateTime inicio,
                                   @Param("fin") LocalDateTime fin);
 }

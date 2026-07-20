@@ -7,9 +7,10 @@ import toast from 'react-hot-toast';
 import { ArrowLeftIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { getHabitacion } from '../../api/habitaciones.api';
 import { consultarDni, procesarCheckin } from '../../api/reservas.api';
-import useAuthStore from '../../store/authStore';
+import useHabitacionesStore from '../../store/habitacionesStore';
 import ResumenReserva from '../../components/recepcion/ResumenReserva';
 import ConfirmacionModal from '../../components/recepcion/ConfirmacionModal';
+import Spinner from '../../components/common/Spinner';
 
 const schema = yup.object({
   tipoDocumento: yup.string().oneOf(['DNI', 'CARNET_EXTRANJERIA']).required(),
@@ -75,7 +76,6 @@ function SectionTitle({ children }) {
 export default function CheckinPage() {
   const { idHabitacion } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
 
   const [habitacion, setHabitacion] = useState(null);
   const [loadingHab, setLoadingHab] = useState(true);
@@ -169,7 +169,10 @@ export default function CheckinPage() {
         cantidadNoches: data.cantidadNoches,
         metodoPago: data.metodoPago,
       };
-      const res = await procesarCheckin(payload, user?.email);
+      const res = await procesarCheckin(payload);
+      // La lista de habitaciones refleja la ocupación al instante,
+      // sin esperar el evento Kafka ni recargar la página
+      useHabitacionesStore.getState().marcarOcupada(habitacion.id);
       toast.success('¡Reserva creada exitosamente!');
       setReservaCreada(res.data);
     } catch (err) {
@@ -184,14 +187,7 @@ export default function CheckinPage() {
   };
 
   if (loadingHab) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <svg className="animate-spin h-8 w-8 text-[#1e3a5f]" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-        </svg>
-      </div>
-    );
+    return <Spinner size="xl" className="h-64" />;
   }
 
   return (

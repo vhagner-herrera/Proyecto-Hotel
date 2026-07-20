@@ -40,41 +40,42 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     public CheckinResponseDTO procesarCheckin(CheckinRequestDTO request, String userEmail) {
         log.info("📥 Check-in solicitado por: {} - Habitación: {} - Documento: {}",
-                 userEmail, request.getNumeroHabitacion(), request.getClienteDocumento());
+                 userEmail, request.getIdHabitacion(), request.getClienteDocumento());
 
         Habitacion habitacion = habitacionRepository.findById(request.getIdHabitacion())
             .orElseThrow(() -> new ReservaException("Habitación no encontrada"));
 
         if (!"DISPONIBLE".equals(habitacion.getEstado())) {
             throw new HabitacionNoDisponibleException(
-                "La habitación " + request.getNumeroHabitacion() +
+                "La habitación " + habitacion.getNumero() +
                 " no está disponible. Estado actual: " + habitacion.getEstado()
             );
         }
 
-        if ("DNI".equals(request.getTipoDocumento())) {
-            if (!request.getClienteDocumento().matches("^[0-9]{8}$")) {
-                throw new ReservaException("DNI debe tener exactamente 8 dígitos numéricos");
-            }
+        if ("DNI".equals(request.getTipoDocumento())
+                && !request.getClienteDocumento().matches("^[0-9]{8}$")) {
+            throw new ReservaException("DNI debe tener exactamente 8 dígitos numéricos");
         }
 
-        BigDecimal montoTotal = request.getPrecioPorNoche()
-            .multiply(new BigDecimal(request.getCantidadNoches()));
+        // Numero, tipo y precio se toman SIEMPRE de la BD, nunca del request:
+        // un cliente malicioso podria enviar un precio adulterado.
+        BigDecimal precioPorNoche = habitacion.getPrecioPorNoche();
+        BigDecimal montoTotal = precioPorNoche
+            .multiply(BigDecimal.valueOf(request.getCantidadNoches()));
 
         LocalDate fechaCheckin = LocalDate.now();
         LocalDate fechaCheckout = fechaCheckin.plusDays(request.getCantidadNoches());
 
-        String codigoReserva = codigoGenerator.generar(reservaRepository);
+        String codigoReserva = codigoGenerator.generar();
 
         Reserva reserva = new Reserva();
-        reserva.setId(UUID.randomUUID());
-        reserva.setIdHabitacion(request.getIdHabitacion());
+        reserva.setIdHabitacion(habitacion.getId());
         reserva.setNombreHuesped(request.getClienteNombreCompleto());
         reserva.setDocumentoHuesped(request.getClienteDocumento());
         reserva.setCodigoReserva(codigoReserva);
         reserva.setClienteDni(request.getClienteDocumento());
         reserva.setClienteNombreCompleto(request.getClienteNombreCompleto());
-        reserva.setNumeroHabitacion(request.getNumeroHabitacion());
+        reserva.setNumeroHabitacion(habitacion.getNumero());
         reserva.setFechaCheckin(fechaCheckin);
         reserva.setFechaCheckout(fechaCheckout);
         reserva.setCantidadNoches(request.getCantidadNoches());
@@ -83,15 +84,15 @@ public class ReservaServiceImpl implements ReservaService {
         Reserva reservaGuardada = reservaRepository.save(reserva);
 
         log.info("✅ Reserva {} creada por {} - Habitación: {} - Total: {}",
-                 codigoReserva, userEmail, request.getNumeroHabitacion(), montoTotal);
+                 codigoReserva, userEmail, habitacion.getNumero(), montoTotal);
 
         ReservaCompletadaEvent event = new ReservaCompletadaEvent(
             reservaGuardada.getId(),
             codigoReserva,
-            request.getIdHabitacion(),
-            request.getNumeroHabitacion(),
-            request.getTipoHabitacion(),
-            request.getPrecioPorNoche(),
+            habitacion.getId(),
+            habitacion.getNumero(),
+            habitacion.getTipo(),
+            precioPorNoche,
             request.getClienteDocumento(),
             request.getClienteNombreCompleto(),
             request.getClienteEdad(),
@@ -111,7 +112,7 @@ public class ReservaServiceImpl implements ReservaService {
             codigoReserva,
             request.getClienteDocumento(),
             request.getClienteNombreCompleto(),
-            request.getNumeroHabitacion(),
+            habitacion.getNumero(),
             fechaCheckin,
             fechaCheckout,
             request.getCantidadNoches(),

@@ -14,6 +14,13 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Configuracion explicita del consumer Kafka.
+ *
+ * NECESARIA en Spring Boot 4: sin @EnableKafka los @KafkaListener no se
+ * registran (la autoconfiguracion de Kafka ya no lo hace por defecto aqui),
+ * y el servicio arranca sin conectarse al broker de forma silenciosa.
+ */
 @EnableKafka
 @Configuration
 public class KafkaConsumerConfig {
@@ -30,10 +37,11 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        
+
         JsonDeserializer<ReservaCompletadaEvent> jsonDeserializer = new JsonDeserializer<>(ReservaCompletadaEvent.class);
         jsonDeserializer.addTrustedPackages("com.hotelbonaventura.*");
-        jsonDeserializer.setUseTypeHeaders(false); // Ignorar headers de tipo del publicador para forzar la deserializacion local
+        // El productor envia String plano: ignorar headers de tipo y deserializar localmente
+        jsonDeserializer.setUseTypeHeaders(false);
 
         return new DefaultKafkaConsumerFactory<>(
                 props,
@@ -44,7 +52,7 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ReservaCompletadaEvent> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, ReservaCompletadaEvent> factory = 
+        ConcurrentKafkaListenerContainerFactory<String, ReservaCompletadaEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;

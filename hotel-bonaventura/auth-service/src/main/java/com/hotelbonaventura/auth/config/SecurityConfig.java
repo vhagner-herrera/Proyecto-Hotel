@@ -1,5 +1,6 @@
 package com.hotelbonaventura.auth.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +24,9 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Value("${CORS_ALLOWED_ORIGIN:http://localhost:3000}")
+    private String allowedOrigin;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -60,13 +64,13 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS: permite al frontend React en localhost:3000 llamar a este servicio.
-     * En produccion, cambiar allowedOrigins por el dominio real del frontend.
+     * CORS: permite al frontend llamar a este servicio.
+     * El origen se configura con la variable de entorno CORS_ALLOWED_ORIGIN.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOrigins(List.of(allowedOrigin));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);

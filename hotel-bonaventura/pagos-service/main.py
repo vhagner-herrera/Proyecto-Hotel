@@ -9,6 +9,8 @@ from database import get_db_connection
 from kafka_consumer import start_consumer, procesar_pago_y_boleta
 from pdf_generator import generar_pdf_boleta
 
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Iniciar consumer de Kafka en un thread de background
@@ -19,7 +21,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Pagos Service", lifespan=lifespan)
 
-# --- RUTAS DE COMPATIBILIDAD (Health Check) ---
+# --- RUTAS DE COMPATIBILIDAD (Health Check & Prometheus) ---
 @app.get("/actuator/health")
 def health_check():
     return {"status": "UP"}
@@ -27,6 +29,11 @@ def health_check():
 @app.get("/actuator/info")
 def info():
     return {"app": {"name": "pagos-service"}}
+
+@app.get("/actuator/prometheus")
+@app.get("/metrics")
+def metrics():
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 # --- RUTAS DE PAGOS ---
 

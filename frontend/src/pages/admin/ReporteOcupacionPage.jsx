@@ -9,17 +9,7 @@ import toast from 'react-hot-toast';
 import { getReportesOcupacion } from '../../api/admin.api';
 import StatsCard from '../../components/admin/StatsCard';
 import TablaOcupacion from '../../components/admin/TablaOcupacion';
-
-function Spinner() {
-  return (
-    <div className="flex items-center justify-center h-64">
-      <svg className="animate-spin h-8 w-8 text-[#1e3a5f]" viewBox="0 0 24 24" fill="none">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-      </svg>
-    </div>
-  );
-}
+import Spinner from '../../components/common/Spinner';
 
 function barColor(pct) {
   if (pct >= 70) return 'bg-red-500';
@@ -31,16 +21,11 @@ export default function ReporteOcupacionPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await getReportesOcupacion();
-      setData(res.data);
-    } catch {
-      toast.error('Error al cargar el reporte de ocupación');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchData = useCallback(() =>
+    getReportesOcupacion()
+      .then((res) => setData(res.data))
+      .catch(() => toast.error('Error al cargar el reporte de ocupación'))
+      .finally(() => setLoading(false)), []);
 
   useEffect(() => {
     fetchData();

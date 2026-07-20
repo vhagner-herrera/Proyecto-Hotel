@@ -36,10 +36,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
-        // Solo loggear el correo, NUNCA la contrasena
-        log.info("Peticion de login recibida para: {}", request.getCorreo());
-
-        AuthResponseDTO response = authService.login(request);
-        return ResponseEntity.ok(response);
+        // El logging del intento de login (solo correo, nunca contrasena) lo hace AuthServiceImpl
+        return ResponseEntity.ok(authService.login(request));
     }
 }
