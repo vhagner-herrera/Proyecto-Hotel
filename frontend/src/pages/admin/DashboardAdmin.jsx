@@ -2,7 +2,6 @@ import {
   HomeIcon,
   UsersIcon,
   ChartBarIcon,
-  ChartPieIcon,
   Cog6ToothIcon,
   BuildingStorefrontIcon,
 } from '@heroicons/react/24/outline';
@@ -13,7 +12,6 @@ const NAV_ITEMS = [
   { to: '/admin/usuarios', label: 'Usuarios', icon: UsersIcon },
   { to: '/admin/habitaciones', label: 'Habitaciones', icon: BuildingStorefrontIcon },
   { to: '/admin/reportes/ingresos', label: 'Reportes', icon: ChartBarIcon },
-  { to: '/admin/reportes/ocupacion', label: 'Ocupación', icon: ChartPieIcon },
   { to: '/admin/parametros', label: 'Parámetros', icon: Cog6ToothIcon },
 ];
 

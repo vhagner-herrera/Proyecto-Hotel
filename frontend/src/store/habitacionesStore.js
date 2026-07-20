@@ -42,6 +42,17 @@ const useHabitacionesStore = create((set, get) => ({
       ),
       lastFetched: Date.now(),
     })),
+
+  /**
+   * Marca la habitación como DISPONIBLE tras finalizar la estadía.
+   */
+  liberarHabitacion: (idHabitacion) =>
+    set((state) => ({
+      habitaciones: state.habitaciones.map((h) =>
+        h.id === idHabitacion ? { ...h, estado: 'DISPONIBLE' } : h
+      ),
+      lastFetched: Date.now(),
+    })),
 }));
 
 export default useHabitacionesStore;

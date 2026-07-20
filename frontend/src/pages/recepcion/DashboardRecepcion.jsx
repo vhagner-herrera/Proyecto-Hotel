@@ -1,8 +1,13 @@
-import { HomeIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import {
+  HomeIcon,
+  BuildingStorefrontIcon,
+  ClipboardDocumentListIcon,
+} from '@heroicons/react/24/outline';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
 const NAV_ITEMS = [
-  { to: '/recepcion', label: 'Habitaciones', icon: HomeIcon, end: true },
+  { to: '/recepcion', label: 'Inicio', icon: HomeIcon, end: true },
+  { to: '/recepcion/habitaciones', label: 'Habitaciones', icon: BuildingStorefrontIcon },
   { to: '/recepcion/reservas', label: 'Reservas', icon: ClipboardDocumentListIcon },
 ];
 

@@ -4,7 +4,6 @@ import {
   CalendarDaysIcon,
   HomeIcon,
   LockClosedIcon,
-  UsersIcon,
   DocumentTextIcon,
   BanknotesIcon,
 } from '@heroicons/react/24/outline';
@@ -13,7 +12,7 @@ import { getDashboard } from '../../api/admin.api';
 import { formatMoneda } from '../../utils/formatters';
 import Spinner from '../../components/common/Spinner';
 
-export default function HomeAdmin() {
+export default function HomeRecepcion() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,7 +23,7 @@ export default function HomeAdmin() {
         setData(res.data);
         setError(null);
       })
-      .catch(() => setError('No se pudo cargar el dashboard'))
+      .catch(() => setError('No se pudo cargar el resumen de recepción'))
       .finally(() => setLoading(false)), []);
 
   useEffect(() => {
@@ -38,7 +37,7 @@ export default function HomeAdmin() {
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3">
           <Spinner className="" />
-          <span className="text-sm text-gray-500">Cargando dashboard...</span>
+          <span className="text-sm text-gray-500">Cargando resumen de recepción...</span>
         </div>
       </div>
     );
@@ -62,12 +61,6 @@ export default function HomeAdmin() {
 
   const extra = [
     {
-      label: 'Usuarios Activos',
-      value: data?.usuariosActivos ?? 0,
-      icon: UsersIcon,
-      cls: 'text-green-600 bg-green-50',
-    },
-    {
       label: 'Boletas Emitidas Hoy',
       value: data?.boletasEmitidas ?? 0,
       icon: DocumentTextIcon,
@@ -87,8 +80,8 @@ export default function HomeAdmin() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Dashboard de Administración</h2>
-        <p className="text-sm text-gray-500 mt-0.5">Métricas de ingresos y reservas en tiempo real</p>
+        <h2 className="text-xl font-bold text-gray-900">Resumen de Recepción</h2>
+        <p className="text-sm text-gray-500 mt-0.5">Métricas de ingresos, reservas y disponibilidad de habitaciones en tiempo real</p>
       </div>
 
       {/* Main stats */}
@@ -122,7 +115,7 @@ export default function HomeAdmin() {
       {/* Extra metrics */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Métricas Adicionales</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {extra.map(({ label, value, icon: Icon, cls }) => (
             <div key={label} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
               <div className={`p-2 rounded-lg ${cls}`}>

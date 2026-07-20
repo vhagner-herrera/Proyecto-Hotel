@@ -16,5 +16,6 @@ public class ReporteIngresosDTO {
     private BigDecimal totalBaseImponible;
     private BigDecimal totalIGV;
     private Long cantidadBoletas;
+    private Long cantidadReservas;
     private List<IngresosPorDiaDTO> detallesPorDia;
 }

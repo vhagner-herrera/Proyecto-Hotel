@@ -45,6 +45,7 @@ public class ReporteServiceImpl implements ReporteService {
         BigDecimal igv = totalIngresos.subtract(baseImponible);
 
         long cantidadBoletas = boletaRepository.contarBoletasPorPeriodo(inicioDateTime, finDateTime);
+        long cantidadReservas = reservaRepository.contarReservasPorPeriodo(inicioDateTime, finDateTime);
 
         List<Object[]> datosPorDia = boletaRepository.obtenerIngresosPorDia(inicioDateTime, finDateTime);
         List<IngresosPorDiaDTO> detalles = datosPorDia.stream()
@@ -57,7 +58,7 @@ public class ReporteServiceImpl implements ReporteService {
 
         PeriodoDTO periodo = new PeriodoDTO(inicio, fin);
 
-        return new ReporteIngresosDTO(periodo, totalIngresos, baseImponible, igv, cantidadBoletas, detalles);
+        return new ReporteIngresosDTO(periodo, totalIngresos, baseImponible, igv, cantidadBoletas, cantidadReservas, detalles);
     }
 
     @Override
@@ -93,33 +94,34 @@ public class ReporteServiceImpl implements ReporteService {
 
     @Override
     public DashboardDTO obtenerDatosDashboard() {
-        LocalDate primerDiaMes = LocalDate.now().withDayOfMonth(1);
         LocalDate hoy = LocalDate.now();
+        LocalDate primerDiaMes = hoy.withDayOfMonth(1);
 
-        ReporteIngresosDTO ingresos = generarReporteIngresos(primerDiaMes, hoy);
+        // Ingresos del DIA actual (desde hoy 00:00:00 hasta mañana 00:00:00)
+        ReporteIngresosDTO ingresosDia = generarReporteIngresos(hoy, hoy);
+
+        // Ingresos acumulados del mes
+        ReporteIngresosDTO ingresosMes = generarReporteIngresos(primerDiaMes, hoy);
+
         ReporteOcupacionDTO ocupacion = generarReporteOcupacion();
 
-        long reservasMes = reservaRepository.contarReservasPorPeriodo(
-                primerDiaMes.atStartOfDay(),
+        // Reservas del DIA actual: cuenta todas las reservas creadas hoy (incluso si la habitacion ya fue liberada)
+        long reservasDia = reservaRepository.contarReservasPorPeriodo(
+                hoy.atStartOfDay(),
                 hoy.plusDays(1).atStartOfDay()
         );
 
         long usuariosActivos = usuarioRepository.countByEstado("ACTIVO");
 
-        long diasTranscurridos = ChronoUnit.DAYS.between(primerDiaMes, hoy) + 1;
-        BigDecimal promedioDiario = diasTranscurridos > 0
-                ? ingresos.getTotalIngresos().divide(new BigDecimal(diasTranscurridos), 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
         return new DashboardDTO(
-                ingresos.getTotalIngresos(),
-                reservasMes,
+                ingresosDia.getTotalIngresos(),
+                reservasDia,
                 ocupacion.getHabitacionesDisponibles(),
                 ocupacion.getHabitacionesOcupadas(),
                 ocupacion.getPorcentajeOcupacion(),
                 usuariosActivos,
-                ingresos.getCantidadBoletas(),
-                promedioDiario
+                ingresosDia.getCantidadBoletas(),
+                ingresosMes.getTotalIngresos()
         );
     }
 

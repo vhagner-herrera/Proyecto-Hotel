@@ -25,7 +25,8 @@ public class ReservaMapper {
             entity.getFechaCheckin(),
             entity.getFechaCheckout(),
             entity.getCantidadNoches(),
-            entity.getEstado()
+            entity.getEstado(),
+            entity.getCreatedAt()
         );
     }
 

@@ -7,20 +7,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Valida el rol ADMINISTRADOR para todas las rutas /api/admin/**.
+ * Valida el rol ADMINISTRADOR o RECEPCIONISTA para las rutas de administracion/dashboard.
  * El header X-User-Role lo inyecta el Gateway tras validar el JWT.
- * Centraliza la validacion que antes estaba duplicada en cada controller.
  */
 @Component
 public class AdminRoleInterceptor implements HandlerInterceptor {
 
     private static final String HEADER_ROL = "X-User-Role";
-    private static final String ROL_REQUERIDO = "ADMINISTRADOR";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if (!ROL_REQUERIDO.equals(request.getHeader(HEADER_ROL))) {
-            throw new AccesoNoAutorizadoException("Acceso denegado. Se requiere rol ADMINISTRADOR");
+        String rol = request.getHeader(HEADER_ROL);
+        if (!"ADMINISTRADOR".equals(rol) && !"RECEPCIONISTA".equals(rol)) {
+            throw new AccesoNoAutorizadoException("Acceso denegado. Se requiere rol autorizado");
         }
         return true;
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import useHabitacionesStore from '../../store/habitacionesStore';
+import { getReservas } from '../../api/reservas.api';
 import HabitacionCard from '../../components/recepcion/HabitacionCard';
 import FiltroEstados from '../../components/recepcion/FiltroEstados';
 
@@ -19,12 +20,25 @@ function SkeletonCard() {
 export default function HabitacionesPage() {
   const { habitaciones, loading, error, lastFetched, fetchHabitaciones } = useHabitacionesStore();
   const [filtro, setFiltro] = useState('TODAS');
+  const [reservas, setReservas] = useState([]);
+
+  const cargarReservas = async () => {
+    try {
+      const res = await getReservas();
+      setReservas(res.data || []);
+    } catch {
+      // Ignorar fallo de reservas si no se pueden cargar
+    }
+  };
 
   useEffect(() => {
     fetchHabitaciones();
-    // Refresca en segundo plano cada 30s para reflejar cambios de estado
-    // (check-ins de otros usuarios, Kafka) sin recargar la página
-    const interval = setInterval(() => fetchHabitaciones(true), 30_000);
+    cargarReservas();
+    // Refresca en segundo plano cada 15s para sincronizar estado de reservas y temporizador
+    const interval = setInterval(() => {
+      fetchHabitaciones(true);
+      cargarReservas();
+    }, 15_000);
     return () => clearInterval(interval);
   }, [fetchHabitaciones]);
 
@@ -40,6 +54,13 @@ export default function HabitacionesPage() {
       : habitaciones.filter((h) => h.estado === filtro);
 
   const disponibles = habitaciones.filter((h) => h.estado === 'DISPONIBLE').length;
+
+  // Encontrar la reserva activa para cada habitación ocupada
+  const obtenerReservaActiva = (idHabitacion) => {
+    return reservas.find(
+      (r) => r.idHabitacion === idHabitacion && r.estado !== 'CANCELADA' && r.estado !== 'FINALIZADA'
+    );
+  };
 
   return (
     <div className="space-y-5">
@@ -65,10 +86,14 @@ export default function HabitacionesPage() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filtradas.map((h) => (
-            <HabitacionCard key={h.id} habitacion={h} />
+            <HabitacionCard
+              key={h.id}
+              habitacion={h}
+              reservaActiva={obtenerReservaActiva(h.id)}
+            />
           ))}
         </div>
-      )}
+      ) }
     </div>
   );
 }

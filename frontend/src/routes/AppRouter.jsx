@@ -8,6 +8,7 @@ import { ROLES } from '../utils/constants';
 // Code-splitting por ruta: cada página se descarga solo cuando se visita,
 // lo que reduce el bundle inicial y acelera la primera carga.
 const DashboardRecepcion = lazy(() => import('../pages/recepcion/DashboardRecepcion'));
+const HomeRecepcion = lazy(() => import('../pages/recepcion/HomeRecepcion'));
 const HabitacionesPage = lazy(() => import('../pages/recepcion/HabitacionesPage'));
 const CheckinPage = lazy(() => import('../pages/recepcion/CheckinPage'));
 const ReservasPage = lazy(() => import('../pages/recepcion/ReservasPage'));
@@ -36,7 +37,8 @@ export default function AppRouter() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<HabitacionesPage />} />
+            <Route index element={<HomeRecepcion />} />
+            <Route path="habitaciones" element={<HabitacionesPage />} />
             <Route path="checkin/:idHabitacion" element={<CheckinPage />} />
             <Route path="reservas" element={<ReservasPage />} />
           </Route>

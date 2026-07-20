@@ -22,4 +22,5 @@ public class ReservaDTO {
     private LocalDate fechaCheckout;
     private Integer cantidadNoches;
     private String estado;
+    private java.time.LocalDateTime createdAt;
 }

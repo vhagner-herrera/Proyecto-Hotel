@@ -10,12 +10,12 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DashboardDTO {
-    private BigDecimal ingresosMesActual;
-    private Long reservasMesActual;
+    private BigDecimal ingresosDiaActual;
+    private Long reservasDiaActual;
     private Integer habitacionesDisponibles;
     private Integer habitacionesOcupadas;
     private Double porcentajeOcupacion;
     private Long usuariosActivos;
     private Long boletasEmitidas;
-    private BigDecimal promedioIngresosDiario;
+    private BigDecimal ingresosMesActual;
 }
