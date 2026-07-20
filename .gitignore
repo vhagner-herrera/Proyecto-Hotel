@@ -64,3 +64,16 @@ env/
 # System files
 .DS_Store
 Thumbs.db
+
+# Claude AI
+.claude/
+**/.claude/
+
+# Markdown files (excluir todos los .md excepto README.md)
+*.md
+**/*.md
+!README.md
+!README.MD
+!**/README.md
+!**/README.MD
+
